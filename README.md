@@ -7,7 +7,7 @@ usage
 ------
 1) clone repo to your home dir
 ```
-git clone https://github.com/j3tm0t0/aws.git ~/.aws
+git clone https://github.com/j3tm0t0/awsenv.git ~/.aws
 ```
 
 2) prepare key dir
