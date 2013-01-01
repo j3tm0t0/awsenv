@@ -1,0 +1,10 @@
+export AWS_KEY_DIR=$AWS_DIR/keys-$1
+export AWS_CREDENTIAL_FILE=$AWS_KEY_DIR/credential
+. $AWS_CREDENTIAL_FILE
+export AWS_ACCESS_KEY_ID=$AWSAccessKeyId
+export AWS_SECRET_ACCESS_KEY=$AWSSecretKey
+export AWS_ACCESS_KEY=$AWSAccessKeyId
+export AWS_SECRET_KEY=$AWSSecretKey
+
+alias emr="elastic-mapreduce -a $AWS_ACCESS_KEY -p $AWS_SECRET_KEY --region $AWS_REGION"
+alias s3="s3cmd -c $AWS_KEY_DIR/s3cfg"

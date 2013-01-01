@@ -1,0 +1,101 @@
+AWS_DIR=~/.aws
+
+# for JAVA
+if ! which java > /dev/null || [ "$JAVA_HOME" = "" ]
+then
+	for x in /usr/local/java /usr/java/default /usr/lib/jvm/java-6-openjdk /usr/lib/jvm/jre /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home /cygdrive/c/java/
+	do
+		if [ -d $x ]
+		then
+			export JAVA_HOME=$x
+			export PATH=$JAVA_HOME/bin:$PATH
+			break
+		fi
+	done
+fi
+
+# change credential with 'key NAME' command (which will use ~/.aws/keys-NAME/)
+function key
+{
+	if [ "$1" = "" ] 
+	then
+		cd $AWS_DIR
+		echo "<key list>"
+		echo keys-*
+		cd - > /dev/null
+		echo 
+		echo "type 'key <NEW_KEY_NAME>' to create a new user."
+		return 
+	fi
+	keydir=$AWS_DIR/keys-$1
+	if [ -d $keydir ]
+	then
+		source $keydir/env && echo using keys-$1
+	else
+		echo $keydir does not exist. 
+		echo -n "input AWSAccessKeyId : "
+		read accesskey
+		echo -n "input AWSSecretKey : "
+		read secretkey
+		cp -r $AWS_DIR/keys $keydir
+		cat <<EOF > $keydir/credential
+AWSAccessKeyId=$accesskey
+AWSSecretKey=$secretkey
+EOF
+		source $keydir/env && echo using keys-$1
+	fi
+}
+
+# change region with 'region REGION_API_NAME' 
+function region
+{
+	target=$1
+	if [ "$target" = "" ]
+	then
+		if [ "$EC2_REGION" = "" ]
+		then
+			echo "currently region is not set (us-east-1 will be used by default)"
+		else
+			echo currently region is set to $EC2_REGION
+		fi
+		echo "usage: region <region>"
+		echo available regions are:
+		ec2-describe-regions | awk '{print "region "$2}'
+	else
+		export AWS_REGION=$target
+		export EC2_REGION=$target
+		export EC2_URL=https://ec2.$target.amazonaws.com
+		export ELASTICBEANSTALK_URL=https://elasticbeanstalk.$target.amazonaws.com
+		echo API endpoint changed to $target
+	fi
+}
+# region alias
+alias use="region us-east-1"
+alias usw="region us-west-1"
+alias usw2="region us-west-2"
+alias euw="region eu-west-1"
+alias aps="region ap-southeast-1"
+alias aps2="region ap-southeast-2"
+alias apn="region ap-northeast-1"
+
+# permission is important
+chmod 600 $AWS_DIR/keys*/{credential*,s3cfg} &> /dev/null
+
+# for AWS tool HOMEs
+if [ "$AWSENV" = "" ] # do not add path more than once
+then
+	cd $AWS_DIR
+	for x in *_HOME
+	do 
+		export $x=$AWS_DIR/$x
+	done
+	cd - > /dev/null
+
+	for x in $AWS_DIR/*/bin
+	do
+		export PATH=$x:$PATH
+	done
+fi
+
+# to judge multiple load
+export AWSENV=LOADED
